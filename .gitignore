@@ -1,0 +1,32 @@
+# ─── Python ─────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+*.so
+
+# ─── Environment ────────────────────────────────────────────
+.env
+venv/
+.venv/
+env/
+
+# ─── IDE ────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ─── OS ─────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ─── Project specific ───────────────────────────────────────
+# Vector store de Chroma (se regenera al ejecutar)
+data/chroma_db/
+
+# PDF generado (lo generamos con generar_pdf.py pero no lo necesitamos)
+documentos/politica_fintech.pdf

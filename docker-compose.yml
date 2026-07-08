@@ -1,0 +1,61 @@
+# ============================================================
+# docker-compose.yml - Santos Pegasus Soluciones RAG Agent
+# ============================================================
+# Uso:
+#   docker compose build           # Construir la imagen
+#   docker compose run --rm app-setup   # Generar vector store (1 vez)
+#   docker compose up -d           # Iniciar la app
+#   docker compose down            # Detener la app
+#   docker compose logs -f         # Ver logs
+
+services:
+  # ─── Servicio principal: la app Streamlit ─────────────────
+  app:
+    build: .
+    container_name: santos-pegasus-rag
+    ports:
+      - "8501:8501"
+    volumes:
+      # Montar los PDFs desde el host
+      - ../Docs:/docs:ro
+      # Persistir el vector store entre reinicios
+      - chroma_data:/app/data/chroma_db
+      # Montar configuración (API keys, etc.)
+      - ./.env:/app/.env:ro
+    environment:
+      # Override de la ruta de PDFs para el entorno Docker
+      - PDF_DIR=/docs/Santos Pegasus Soluciones/
+      # El resto de var vienen del .env montado
+    restart: unless-stopped
+    # Pequeño healthcheck para monitorear
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ─── Servicio de setup: genera el vector store (1 vez) ───
+  app-setup:
+    build: .
+    container_name: santos-pegasus-setup
+    volumes:
+      - ../Docs:/docs:ro
+      - chroma_data:/app/data/chroma_db
+      - ./.env:/app/.env:ro
+    environment:
+      - PDF_DIR=/docs/Santos Pegasus Soluciones/
+    # Ejecuta build_vector_store una sola vez y sale
+    command: >
+      python -c
+      "from src.vector_store import build_vector_store;
+      print('=== Inicializando vector store ===');
+      build_vector_store();
+      print('=== Vector store listo ===');"
+    # No reiniciar, es un one-shot
+    profiles:
+      - setup
+
+volumes:
+  chroma_data:
+    name: santos-pegasus-chroma
