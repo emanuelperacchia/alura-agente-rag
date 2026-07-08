@@ -20,7 +20,7 @@ echo "========================================"
 
 # ─── Configuración ──────────────────────────────────────────
 PROJECT_DIR="$HOME/nexofin-agent"
-REPO_URL=""  # <-- COMPLETAR con la URL de tu repo en GitHub
+REPO_URL="https://github.com/emanuelperacchia/alura-agente-rag.git"
 STREAMLIT_PORT=8501
 
 # ─── 1. Instalar dependencias del sistema ──────────────────
