@@ -30,7 +30,7 @@ COPY src/ src/
 COPY app.py .
 
 # ─── Crear directorios para datos persistentes ─────────────
-RUN mkdir -p /app/data/chroma_db
+RUN mkdir -p /app/data/chroma_db /app/data/sessions
 
 # ─── Puerto de Streamlit ───────────────────────────────────
 EXPOSE 8501

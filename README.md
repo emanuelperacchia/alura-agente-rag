@@ -32,11 +32,11 @@ Utiliza **RAG (Retrieval-Augmented Generation)** para recuperar información pre
 
 **Santos Pegasus Soluciones** es una empresa de tecnología que mantiene una extensa documentación interna: guías de arquitectura, manuales de onboarding, protocolos de incidentes, y estándares de desarrollo front-end y back-end.
 
-Este agente de IA permite a cualquier desarrolladora o desarrollador hacer preguntas en lenguaje natural sobre esa documentación y recibir respuestas inmediatas, sin necesidad de abrir ningún documento.
+Este agente de IA permite a cualquier desarrolladora o desarrollador hacer preguntas en lenguaje natural sobre esa documentación y recibir respuestas inmediatas, sin necesidad de abrir ningún documento. Las conversaciones se **persisten automáticamente** en el navegador: podés cerrar la pestaña, volver a entrar, y la historia sigue ahí.
 
 ### ¿Qué problema resuelve?
 
-Los equipos de tecnología pierden horas buscando información en manuales dispersos. Este agente elimina esa fricción: preguntás en lenguaje natural y obtenés la respuesta al instante, con la fuente exacta del documento.
+Los equipos de tecnología pierden horas buscando información en manuales dispersos. Este agente elimina esa fricción: preguntás en lenguaje natural y obtenés la respuesta al instante, con la fuente exacta del documento. Además, las conversaciones se guardan automáticamente: aunque cierres la pestaña, al volver tu historial está intacto.
 
 ---
 
@@ -175,7 +175,8 @@ alura-agente-santos-pegasus/
 │   └── rag_chain.py                 # Cadena RAG + LLM
 │
 ├── data/
-│   └── chroma_db/                   # Vector store persistente (se genera solo)
+│   ├── chroma_db/                   # Vector store persistente (se genera solo)
+│   └── sessions/                    # Sesiones de chat persistentes (se generan al usar)
 │
 └── scripts/
     └── deploy_oci.sh                # Script de despliegue en OCI
@@ -404,14 +405,16 @@ docker compose logs -f
 | `docker compose logs -f` | Ver logs en tiempo real |
 | `docker compose build` | Reconstruir la imagen (tras cambios en código) |
 | `docker compose run --rm app-setup` | Regenerar vector store (si cambiaron los PDFs) |
-| `docker compose down -v` | Borrar TODO (incluyendo el vector store) |
+| `docker compose exec app rm -rf /app/data/sessions/*` | Limpiar todas las sesiones guardadas |
+| `docker compose down -v` | Borrar TODO (incluyendo vector store y sesiones) |
 
 ### Estructura de volúmenes
 
 ```
 Host                          → Contenedor
 ../Docs/                      → /docs/ (lectura, PDFs fuente)
-./data/chroma_db/             → /app/data/chroma_db/ (persistente)
+./data/chroma_db/             → /app/data/chroma_db/ (vector store persistente)
+./data/sessions/              → /app/data/sessions/ (sesiones de chat persistentes)
 ./.env                        → /app/.env (configuración)
 ```
 

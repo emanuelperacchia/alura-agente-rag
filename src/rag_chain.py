@@ -103,6 +103,39 @@ def create_rag_chain(retriever):
     return rag_chain
 
 
+def stream_answer(retriever, question: str):
+    """
+    Generador para streaming de respuesta RAG.
+    Cada yield es un fragmento de texto del LLM (token a token).
+    Después de agotar el generador, los docs recuperados quedan
+    disponibles en stream_answer.docs y stream_answer.full_answer.
+    """
+    llm = get_llm()
+
+    # 1. Recuperar contexto
+    docs = retriever.invoke(question)
+    context = "\n\n".join(doc.page_content for doc in docs)
+
+    # 2. Armar el prompt con el contexto inyectado
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SYSTEM_PROMPT),
+        ("human", "{input}"),
+    ])
+    messages = prompt.format_messages(context=context, input=question)
+
+    # 3. Streamear token a token
+    full = ""
+    for chunk in llm.stream(messages):
+        content = getattr(chunk, "content", "")
+        if content:
+            full += content
+            yield content
+
+    # Guardar para que el caller pueda acceder después del streaming
+    stream_answer.docs = docs
+    stream_answer.full_answer = full
+
+
 if __name__ == "__main__":
     # Prueba rápida de la cadena RAG
     from src.vector_store import get_retriever

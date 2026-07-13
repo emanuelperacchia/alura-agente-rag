@@ -28,5 +28,11 @@ Thumbs.db
 # Vector store de Chroma (se regenera al ejecutar)
 data/chroma_db/
 
+# Sesiones de chat persistentes (se regeneran al usar la app)
+data/sessions/
+
 # PDF generado (lo generamos con generar_pdf.py pero no lo necesitamos)
 documentos/politica_fintech.pdf
+
+# Skill registry
+.atl/

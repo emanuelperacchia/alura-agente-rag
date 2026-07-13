@@ -53,11 +53,16 @@ def get_embeddings():
 def _create_vector_store(documents: list, embeddings) -> Chroma:
     """
     Crea un nuevo vector store a partir de los documentos chunkeados.
-    Si ya existe uno, lo elimina y lo recrea.
+    Si ya existe uno, vacía su contenido y lo recrea.
     """
     if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
-        print(f"[VectorStore] Directorio existente eliminado: {CHROMA_PATH}")
+        for entry in os.listdir(CHROMA_PATH):
+            entry_path = os.path.join(CHROMA_PATH, entry)
+            if os.path.isfile(entry_path) or os.path.islink(entry_path):
+                os.unlink(entry_path)
+            elif os.path.isdir(entry_path):
+                shutil.rmtree(entry_path)
+        print(f"[VectorStore] Contenido existente eliminado: {CHROMA_PATH}")
 
     db = Chroma.from_documents(
         documents=documents,

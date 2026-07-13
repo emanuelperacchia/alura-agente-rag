@@ -20,6 +20,8 @@ services:
       - ../Docs:/docs:ro
       # Persistir el vector store entre reinicios
       - chroma_data:/app/data/chroma_db
+      # Persistir las sesiones de chat entre reinicios
+      - sessions_data:/app/data/sessions
       # Montar configuración (API keys, etc.)
       - ./.env:/app/.env:ro
     environment:
@@ -42,6 +44,7 @@ services:
     volumes:
       - ../Docs:/docs:ro
       - chroma_data:/app/data/chroma_db
+      - sessions_data:/app/data/sessions
       - ./.env:/app/.env:ro
     environment:
       - PDF_DIR=/docs/Santos Pegasus Soluciones/
@@ -59,3 +62,5 @@ services:
 volumes:
   chroma_data:
     name: santos-pegasus-chroma
+  sessions_data:
+    name: santos-pegasus-sessions

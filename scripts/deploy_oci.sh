@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================
-# NexoFin - Script de Deploy en OCI Compute
+# Santos Pegasus Soluciones - Deploy en OCI Compute
 # ============================================================
 # Uso:
 #   1. Crear una instancia en OCI Compute (Ubuntu 22.04+)
@@ -10,18 +10,20 @@
 # Requisitos:
 #   - Git, Python 3.11+, pip
 #   - Puerto 8501 abierto en el Security List de OCI
+#   - Los PDFs de Santos Pegasus en el directorio correcto
 # ============================================================
 
 set -e
 
 echo "========================================"
-echo "  NexoFin - Deploy en OCI Compute"
+echo "  Santos Pegasus Soluciones - Deploy"
 echo "========================================"
 
 # ─── Configuración ──────────────────────────────────────────
-PROJECT_DIR="$HOME/nexofin-agent"
+PROJECT_DIR="$HOME/santos-pegasus-rag"
 REPO_URL="https://github.com/emanuelperacchia/alura-agente-rag.git"
 STREAMLIT_PORT=8501
+PDF_DIR="$PROJECT_DIR/../Docs/Santos Pegasus Soluciones"
 
 # ─── 1. Instalar dependencias del sistema ──────────────────
 echo "[1/6] Instalando dependencias del sistema..."
@@ -64,22 +66,22 @@ if [ ! -f .env ]; then
     read -p "   Presioná Enter después de editar el archivo..."
 fi
 
-# ─── 5. Generar PDF y vector store ─────────────────────────
-echo "[5/6] Generando PDF y vector store..."
+# ─── 5. Crear directorios de datos e inicializar vector store ──
+echo "[5/6] Creando directorios de datos e inicializando vector store..."
+mkdir -p data/chroma_db data/sessions
 source venv/bin/activate
-python documentos/generar_pdf.py
 python -c "from src.vector_store import build_vector_store; build_vector_store()"
 
 # ─── 6. Iniciar Streamlit ─────────────────────────────────
 echo "[6/6] Iniciando Streamlit en puerto $STREAMLIT_PORT..."
 echo ""
 echo "========================================"
-echo "  ✅ NexoFin desplegado correctamente"
+echo "  ✅ Santos Pegasus desplegado correctamente"
 echo "  📍 http://$(curl -s ifconfig.me):$STREAMLIT_PORT"
 echo "  💡 Para mantenerlo corriendo después"
 echo "     de cerrar la terminal, usá:"
-echo "     screen -S nexofin"
-echo "     Y ejecutá este script nuevamente"
+echo "     screen -S santos-pegasus"
+echo "     y ejecutá este script nuevamente"
 echo "========================================"
 
 source venv/bin/activate
