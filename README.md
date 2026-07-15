@@ -1,12 +1,17 @@
 # 💻 Santos Pegasus Soluciones — Agente Inteligente RAG
 
+[![Live](https://img.shields.io/badge/Live-spsoluciones.duckdns.org-brightgreen)](https://spsoluciones.duckdns.org)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
 [![LangChain](https://img.shields.io/badge/LangChain-0.3+-green.svg)](https://langchain.com)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.38+-red.svg)](https://streamlit.io)
 [![Cohere](https://img.shields.io/badge/Cohere-Command_R-yellow.svg)](https://cohere.com)
+[![HTTPS](https://img.shields.io/badge/HTTPS-Let's_Encrypt-green)](https://letsencrypt.org)
 [![OCI](https://img.shields.io/badge/Deploy-OCI_Compute-orange.svg)](https://oracle.com/cloud)
+[![DuckDNS](https://img.shields.io/badge/Domain-DuckDNS-blueviolet)](https://duckdns.org)
 
 Asistente técnico impulsado por inteligencia artificial que responde preguntas sobre la documentación interna de **Santos Pegasus Soluciones**, una empresa de tecnología especializada en desarrollo de software escalable bajo arquitectura de microservicios.
+
+> 🌐 **Live demo:** [`https://spsoluciones.duckdns.org`](https://spsoluciones.duckdns.org)
 
 Utiliza **RAG (Retrieval-Augmented Generation)** para recuperar información precisa desde **5 documentos PDF técnicos** y generar respuestas en lenguaje natural.
 
@@ -422,75 +427,174 @@ Host                          → Contenedor
 
 ## ☁️ Deploy en OCI
 
+El proyecto está desplegado en producción en una instancia **OCI Compute Free Tier** (Oracle Linux 9 ARM) con dominio personalizado y HTTPS.
+
+> **🌐 URL:** [`https://spsoluciones.duckdns.org`](https://spsoluciones.duckdns.org)
+
 ### Requisitos
 
 - Una cuenta en [Oracle Cloud Infrastructure](https://cloud.oracle.com/)
-- Una instancia **Compute** (VM.Standard.E2.1.Micro — siempre gratuita)
-- Puerto **8501** abierto en el Security List
-- Los PDFs de Santos Pegasus Soluciones deben estar accesibles desde la instancia
+- Una instancia **Compute** (VM.Standard.E2.1.Micro — siempre gratuita) con **Oracle Linux 9** (ARM)
+- Los PDFs de Santos Pegasus Soluciones
+- API key de [Cohere](https://dashboard.cohere.com/)
 
-### Opción 1: Script automático
+### Paso 1: Conectarse a la instancia
 
 ```bash
-# En la instancia OCI
-git clone https://github.com/TU_USUARIO/alura-agente-santos-pegasus.git
-cd alura-agente-santos-pegasus
-bash scripts/deploy_oci.sh
+ssh -i ~/.ssh/cloudshellkey opc@<IP_PUBLICA>
 ```
 
-> **Importante:** Editá el script `scripts/deploy_oci.sh` y completá la variable `REPO_URL` con la URL de tu repositorio. También asegurate de copiar los PDFs al directorio correcto o ajustar `PDF_DIR` en el `.env`.
-
-### Opción 2: Manual paso a paso
+### Paso 2: Instalar dependencias
 
 ```bash
-# 1. Conectarse a la instancia OCI por SSH
-ssh -i tu_clave.pem ubuntu@IP_DE_TU_INSTANCIA
+sudo dnf install -y git python3.11 python3.11-pip
+pip3.11 install virtualenv
+```
 
-# 2. Instalar dependencias
-sudo apt update && sudo apt install -y python3 python3-pip python3-venv git
+### Paso 3: Clonar el proyecto y preparar entorno
 
-# 3. Clonar el proyecto
-git clone https://github.com/TU_USUARIO/alura-agente-santos-pegasus.git
-cd alura-agente-santos-pegasus
-
-# 4. Copiar los PDFs (ajustá la ruta según corresponda)
-# Opción A: Subilos por SCP
-# scp -r Docs/Santos\ Pegasus\ Soluciones/ usuario@IP:~/alura-agente-santos-pegasus/../Docs/
-# Opción B: Creá la carpeta y ajustá PDF_DIR en .env
-
-# 5. Entorno virtual y dependencias
-python3 -m venv venv
+```bash
+git clone https://github.com/emanuelperacchia/alura-agente-rag.git
+cd alura-agente-rag
+python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-
-# 6. Configurar .env
-cp .env.example .env
-nano .env  # Completar COHERE_API_KEY y PDF_DIR si es necesario
-
-# 7. Inicializar vector store
-python -c "from src.vector_store import build_vector_store; build_vector_store()"
-
-# 8. Ejecutar Streamlit
-screen -S santos-pegasus
-streamlit run app.py --server.port=8501 --server.address=0.0.0.0
 ```
 
-### Abrir puerto en OCI
+### Paso 4: Configurar .env
 
-1. Ir a **Menú → Networking → Virtual Cloud Networks**
-2. Seleccionar la VCN de la instancia
-3. Ir a **Security Lists** → **Ingress Rules**
-4. Agregar regla: `Source: 0.0.0.0/0`, `Destination Port Range: 8501`, `Protocol: TCP`
+```bash
+cp .env.example .env
+nano .env
+```
+
+```env
+LLM_PROVIDER=cohere
+COHERE_API_KEY=tc_xxxxxxxxxx
+PDF_DIR=/home/opc/alura-agente-rag/documentos
+```
+
+### Paso 5: Subir los PDFs
+
+```bash
+# Desde otra terminal Cloud Shell
+scp -i ~/.ssh/cloudshellkey *.pdf opc@<IP>:~/alura-agente-rag/documentos/
+```
+
+### Paso 6: Inicializar vector store
+
+```bash
+source venv/bin/activate
+python -c "from src.vector_store import build_vector_store; build_vector_store()"
+```
+
+> **Nota para ARM (Oracle Linux):** Si ChromaDB falla por `sqlite3_deserialize`, compilá sqlite3 moderno desde source (`/usr/local/lib/libsqlite3.so`) y agregá el parche `ctypes.CDLL(so)` al inicio de `vector_store.py` y `app.py`.
+
+### Paso 7: Abrir puertos en OCI
+
+**Menú → Networking → Virtual Cloud Networks** → Security List de tu VCN → **Add Ingress Rules**:
+
+| Puerto | Protocolo | Source | Description |
+|--------|-----------|--------|-------------|
+| 80 | TCP | 0.0.0.0/0 | HTTP (nginx) |
+| 443 | TCP | 0.0.0.0/0 | HTTPS |
+| 8501 | TCP | 0.0.0.0/0 | Streamlit directo |
+
+Y en la instancia:
+
+```bash
+sudo firewall-cmd --add-port=80/tcp --permanent
+sudo firewall-cmd --add-port=443/tcp --permanent
+sudo firewall-cmd --add-port=8501/tcp --permanent
+sudo firewall-cmd --reload
+```
+
+### Paso 8: Nginx reverse proxy + HTTPS
+
+```bash
+# Instalar nginx
+sudo dnf install -y nginx
+
+# SELinux: permitir que nginx conecte a localhost
+sudo setsebool -P httpd_can_network_connect 1
+
+# Crear configuración como proxy reverso
+sudo tee /etc/nginx/conf.d/santos.conf > /dev/null <<'EOF'
+server {
+    server_name spsoluciones.duckdns.org;
+
+    location / {
+        proxy_pass http://127.0.0.1:8501;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_read_timeout 86400;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/spsoluciones.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/spsoluciones.duckdns.org/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+EOF
+```
+
+### Paso 9: Certificado SSL gratuito
+
+```bash
+# Instalar certbot
+source ~/alura-agente-rag/venv/bin/activate
+pip install certbot certbot-nginx
+
+# Obtener certificado
+sudo ~/alura-agente-rag/venv/bin/certbot --nginx \
+  -d spsoluciones.duckdns.org \
+  --non-interactive --agree-tos -m tu@email.com
+
+# Renovación automática a las 3 AM
+echo "0 3 * * * root /home/opc/alura-agente-rag/venv/bin/certbot renew --quiet" | \
+  sudo tee /etc/cron.d/certbot-renew
+```
+
+### Paso 10: Iniciar la app
+
+```bash
+cd ~/alura-agente-rag
+source venv/bin/activate
+nohup streamlit run app.py \
+  --server.port=8501 \
+  --server.address=127.0.0.1 \
+  > streamlit.log 2>&1 &
+```
+
+Para ver logs:
+
+```bash
+tail -f ~/alura-agente-rag/streamlit.log
+```
+
+### ✨ Resultado final
+
+| Componente | URL |
+|---|---|
+| **App HTTPS** | 🔒 [`https://spsoluciones.duckdns.org`](https://spsoluciones.duckdns.org) |
+| **App HTTP** | [`http://spsoluciones.duckdns.org`](http://spsoluciones.duckdns.org) (redirige a HTTPS) |
+| **IP directa** | [`http://168.129.179.237`](http://168.129.179.237) |
 
 ---
 
 ## 📸 Capturas de Pantalla
 
-> **⏳ Espacio reservado para las capturas del deploy.**
->
-> Luego del deploy en OCI, agregá acá:
-> - Una captura de la aplicación funcionando en la URL pública
-> - Un enlace directo a la app desplegada
+La aplicación está desplegada y accesible en:
+
+- 🔒 **`https://spsoluciones.duckdns.org`**
+
+![Santos Pegasus RAG Agent](https://img.shields.io/badge/Live-spsoluciones.duckdns.org-brightgreen)
+
+> *Podés probar el asistente directamente sin necesidad de instalar nada.*
 
 ---
 
