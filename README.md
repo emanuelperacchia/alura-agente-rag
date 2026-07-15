@@ -588,13 +588,11 @@ tail -f ~/alura-agente-rag/streamlit.log
 
 ## 📸 Capturas de Pantalla
 
-La aplicación está desplegada y accesible en:
+| Pantalla de bienvenida | Respuesta con fuentes |
+|---|---|
+| ![Bienvenida](assets/Bienvenida.jpg) | ![Ejecución](assets/En%20ejecucion.jpg) |
 
-- 🔒 **`https://spsoluciones.duckdns.org`**
-
-![Santos Pegasus RAG Agent](https://img.shields.io/badge/Live-spsoluciones.duckdns.org-brightgreen)
-
-> *Podés probar el asistente directamente sin necesidad de instalar nada.*
+> Podés probar el asistente directamente en [`https://spsoluciones.duckdns.org`](https://spsoluciones.duckdns.org)
 
 ---
 
